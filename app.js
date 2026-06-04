@@ -129,16 +129,20 @@ function loadSyncSettings() {
   return settings;
 }
 
-function saveSyncSettings() {
-  const settings = {
+function readSyncSettingsFromInputs() {
+  return {
     token: elements.gistToken.value.trim(),
     gistId: elements.gistId.value.trim(),
     file: elements.gistFile.value.trim() || "lockbox-vault.json",
     autoSync: elements.autoSync.checked,
   };
+}
+
+function saveSyncSettings({ quiet = false } = {}) {
+  const settings = readSyncSettingsFromInputs();
   localStorage.setItem(SYNC_KEY, JSON.stringify(settings));
   configureAutoSync();
-  showToast("同步配置已保存");
+  if (!quiet) showToast("同步配置已保存");
   return settings;
 }
 
@@ -292,11 +296,12 @@ function lock() {
 }
 
 async function pushToGist() {
-  const settings = saveSyncSettings();
+  const settings = saveSyncSettings({ quiet: true });
   if (!settings.token) {
     showToast("请先填写 GitHub Token");
     return;
   }
+  showToast("正在推送远端...");
   const envelope = await encryptVault(vault, masterPassword);
   const body = {
     description: "Lockbox encrypted password vault",
@@ -320,16 +325,17 @@ async function pushToGist() {
   if (!response.ok) throw new Error(await response.text());
   const result = await response.json();
   elements.gistId.value = result.id;
-  saveSyncSettings();
+  saveSyncSettings({ quiet: true });
   showToast("已推送到 GitHub Gist");
 }
 
 async function pullFromGist(silent = false) {
-  const settings = JSON.parse(localStorage.getItem(SYNC_KEY) || "{}");
+  const settings = silent ? JSON.parse(localStorage.getItem(SYNC_KEY) || "{}") : saveSyncSettings({ quiet: true });
   if (!settings.token || !settings.gistId) {
-    if (!silent) showToast("请先保存 GitHub Token 和 Gist ID");
+    if (!silent) showToast("请先填写 GitHub Token 和 Gist ID");
     return;
   }
+  if (!silent) showToast("正在拉取远端...");
   const response = await fetch(`https://api.github.com/gists/${settings.gistId}`, {
     headers: {
       Authorization: `Bearer ${settings.token}`,
