@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lockbox 密码管理器</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a" aria-hidden="true"></div>
+    <div class="ambient ambient-b" aria-hidden="true"></div>
+    <div class="ambient ambient-c" aria-hidden="true"></div>
+    <main class="shell">
+      <section class="unlock-view" id="unlockView">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">L</span>
+          <div>
+            <h1>Lockbox</h1>
+            <p>端到端加密密码库</p>
+          </div>
+        </div>
+
+        <form class="unlock-panel" id="unlockForm">
+          <label for="masterPassword">主密码</label>
+          <div class="password-row">
+            <input
+              id="masterPassword"
+              type="password"
+              autocomplete="current-password"
+              minlength="10"
+              placeholder="输入主密码"
+              required
+            />
+            <button type="button" class="icon-button" id="toggleMaster" title="显示/隐藏主密码">◎</button>
+          </div>
+          <p class="hint">主密码不会保存。忘记主密码后，已加密的数据无法恢复。</p>
+          <button class="primary-button" type="submit">解锁密码库</button>
+        </form>
+      </section>
+
+      <section class="app-view hidden" id="appView">
+        <header class="topbar">
+          <div class="brand compact">
+            <span class="brand-mark" aria-hidden="true">L</span>
+            <div>
+              <h1>Lockbox</h1>
+              <p id="syncState">本地已加密保存</p>
+            </div>
+          </div>
+          <div class="top-actions">
+            <button type="button" class="secondary-button" id="lockButton">锁定</button>
+            <button type="button" class="primary-button" id="addButton">新增</button>
+          </div>
+        </header>
+
+        <div class="workspace">
+          <aside class="sidebar">
+            <div class="search-row">
+              <input id="searchInput" type="search" placeholder="搜索网站、账号、备注" />
+            </div>
+            <nav class="tabs" aria-label="视图">
+              <button type="button" class="tab active" data-view="vault">密码库</button>
+              <button type="button" class="tab" data-view="sync">同步</button>
+              <button type="button" class="tab" data-view="tools">工具</button>
+            </nav>
+            <div class="stats">
+              <span id="vaultCount">0 项</span>
+              <span id="lastSaved">尚未保存</span>
+            </div>
+          </aside>
+
+          <section class="content-view" id="vaultPane">
+            <div class="list" id="entryList"></div>
+            <form class="editor" id="entryForm">
+              <input type="hidden" id="entryId" />
+              <div class="form-grid">
+                <label>
+                  名称
+                  <input id="entryTitle" required placeholder="例如 Apple ID" />
+                </label>
+                <label>
+                  网站
+                  <input id="entryUrl" inputmode="url" placeholder="https://example.com" />
+                </label>
+                <label>
+                  用户名
+                  <input id="entryUsername" autocomplete="off" placeholder="邮箱或账号" />
+                </label>
+                <label>
+                  密码
+                  <div class="password-row">
+                    <input id="entryPassword" type="password" autocomplete="off" required />
+                    <button type="button" class="icon-button" id="toggleEntryPassword" title="显示/隐藏密码">◎</button>
+                    <button type="button" class="icon-button" id="generatePassword" title="生成强密码">↻</button>
+                  </div>
+                </label>
+                <label class="span-2">
+                  备注
+                  <textarea id="entryNotes" rows="4" placeholder="安全问题、恢复码位置等"></textarea>
+                </label>
+              </div>
+              <div class="editor-actions">
+                <button type="button" class="danger-button" id="deleteButton">删除</button>
+                <button type="button" class="secondary-button" id="copyPassword">复制密码</button>
+                <button type="submit" class="primary-button">保存</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="content-view hidden" id="syncPane">
+            <div class="settings">
+              <h2>GitHub Gist 同步</h2>
+              <p>只同步加密密文。建议使用仅有 gist 权限的 GitHub fine-grained token。</p>
+              <label>
+                GitHub Token
+                <input id="gistToken" type="password" autocomplete="off" placeholder="ghp_..." />
+              </label>
+              <label>
+                Gist ID
+                <input id="gistId" autocomplete="off" placeholder="留空则首次推送时创建" />
+              </label>
+              <label>
+                文件名
+                <input id="gistFile" value="lockbox-vault.json" />
+              </label>
+              <div class="toggle-row">
+                <input id="autoSync" type="checkbox" />
+                <label for="autoSync">每 30 秒自动拉取远端更新</label>
+              </div>
+              <div class="button-row">
+                <button type="button" class="secondary-button" id="saveSyncSettings">保存配置</button>
+                <button type="button" class="secondary-button" id="pullRemote">拉取远端</button>
+                <button type="button" class="primary-button" id="pushRemote">推送远端</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="content-view hidden" id="toolsPane">
+            <div class="settings">
+              <h2>导入导出</h2>
+              <p>导出的文件仍然是加密密文，可用于备份或换设备导入。</p>
+              <div class="button-row">
+                <button type="button" class="secondary-button" id="exportVault">导出加密库</button>
+                <label class="file-button">
+                  导入加密库
+                  <input type="file" id="importVault" accept="application/json" />
+                </label>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
